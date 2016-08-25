@@ -1786,8 +1786,12 @@ static int mass_storage_function_init(struct android_usb_function *f,
 								GFP_KERNEL);
 	if (!config)
 		return -ENOMEM;
-
+#ifdef CONFIG_ZTEMT_USB
+       /* ZTEMT: NO ums in new nubia storage solution */
+        config->fsg.nluns = 0;
+#else
 	config->fsg.nluns = 1;
+#endif
 	snprintf(name[0], MAX_LUN_NAME, "lun");
 	config->fsg.luns[0].removable = 1;
 
@@ -1818,6 +1822,10 @@ static int mass_storage_function_init(struct android_usb_function *f,
 		config->fsg.nluns++;
 	}
 
+#ifdef CONFIG_ZTEMT_USB
+       config->fsg.vendor_name = "nubia";
+       config->fsg.product_name = "Android";
+#endif
 	common = fsg_common_init(NULL, cdev, &config->fsg);
 	if (IS_ERR(common)) {
 		kfree(config);
