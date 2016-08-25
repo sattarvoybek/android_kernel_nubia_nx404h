@@ -831,6 +831,16 @@ static int msm_actuator_close(struct v4l2_subdev *sd,
 		pr_err("failed\n");
 		return -EINVAL;
 	}
+
+/*standby actuator when exit camera for avoiding electric leakage, tanyijun add start */
+	rc = a_ctrl->i2c_client.i2c_func_tbl->i2c_write(
+		&a_ctrl->i2c_client,
+		0xF4,0x00, MSM_CAMERA_I2C_BYTE_DATA);  // reset actautor to 0c0de
+	rc = a_ctrl->i2c_client.i2c_func_tbl->i2c_write(
+		&a_ctrl->i2c_client,
+		0x34,0x00, MSM_CAMERA_I2C_BYTE_DATA); // clear PS and EN register to standby actuator
+/*standby actuator when exit camera for avoiding electric leakage, tanyijun add end */
+	
 	if (a_ctrl->act_device_type == MSM_CAMERA_PLATFORM_DEVICE) {
 		rc = a_ctrl->i2c_client.i2c_func_tbl->i2c_util(
 			&a_ctrl->i2c_client, MSM_CCI_RELEASE);

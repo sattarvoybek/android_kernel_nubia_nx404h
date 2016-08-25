@@ -2366,7 +2366,6 @@ static int calculate_raw_soc(struct qpnp_bms_chip *chip,
 					- params->cc_uah
 					- params->uuc_uah;
 	pr_debug("RUC = %duAh\n", remaining_usable_charge_uah);
-
 	soc = DIV_ROUND_CLOSEST((remaining_usable_charge_uah * 100),
 				(params->fcc_uah - params->uuc_uah));
 
@@ -3417,7 +3416,13 @@ static void battery_insertion_check(struct qpnp_bms_chip *chip)
 /* Returns capacity as a SoC percentage between 0 and 100 */
 static int get_prop_bms_capacity(struct qpnp_bms_chip *chip)
 {
+ #ifdef CONFIG_ZTEMT_CHARGE
+	int soc = report_state_of_charge(chip);
+	soc = bound_soc(soc);
+	return soc;
+#else
 	return report_state_of_charge(chip);
+#endif
 }
 
 static void qpnp_bms_external_power_changed(struct power_supply *psy)
@@ -3680,7 +3685,13 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 	if (chip->batt_type == BATT_DESAY) {
 		batt_data = &desay_5200_data;
 	} else if (chip->batt_type == BATT_PALLADIUM) {
+#ifdef CONFIG_ZTEMT_2400AMH_BATTERY
+		batt_data = &ztemt_2400mAh_data;
+#elif defined(CONFIG_ZTEMT_2000AMH_BATTERY)
+		batt_data = &ztemt_2000mAh_data;
+#else	
 		batt_data = &palladium_1500_data;
+#endif
 	} else if (chip->batt_type == BATT_OEM) {
 		batt_data = &oem_batt_data;
 	} else if (chip->batt_type == BATT_QRD_4V35_2000MAH) {
@@ -3695,6 +3706,10 @@ static int set_battery_data(struct qpnp_bms_chip *chip)
 			return battery_id;
 		}
 
+/*
+  CONFIG_ZTEMT_CHARGE
+   读取battery-data 数据==这里暂时不用dts中的配置信息。
+*/
 		node = of_find_node_by_name(chip->spmi->dev.of_node,
 				"qcom,battery-data");
 		if (!node) {

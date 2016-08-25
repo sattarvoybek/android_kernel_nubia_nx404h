@@ -1414,7 +1414,7 @@ static int msm_isp_stop_axi_stream(struct vfe_device *vfe_dev,
 	if (cur_stream_cnt == 0) {
 		vfe_dev->ignore_error = 1;
 		if (camif_update == DISABLE_CAMIF_IMMEDIATELY) {
-			vfe_dev->hw_info->vfe_ops.axi_ops.halt(vfe_dev, 1);
+			vfe_dev->hw_info->vfe_ops.axi_ops.halt(vfe_dev,1);//tanyijun modify 
 		}
 		vfe_dev->hw_info->vfe_ops.core_ops.reset_hw(vfe_dev, ISP_RST_HARD, 1);
 		vfe_dev->hw_info->vfe_ops.core_ops.init_hw_reg(vfe_dev);

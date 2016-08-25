@@ -116,6 +116,10 @@ enum msm_camera_vreg_name_t {
 	CAM_VIO,
 	CAM_VANA,
 	CAM_VAF,
+#ifdef CONFIG_ZTEMT_CAMERA
+	CAM_VANA2,
+#endif
+	
 	CAM_VREG_MAX,
 };
 
