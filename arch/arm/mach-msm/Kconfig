@@ -3052,3 +3052,21 @@ config KERNEL_TEXT_MPU_PROT
           sections early in boot. Read access is permitted to
           all masters; Write access is only permited to the
           secure world.
+
+config ZTEMT_RESTART
+	bool "ZTEMT restart"
+	help
+	  Support for the ZTEMT restart
+
+config ZTEMT_PANIC_BOOTMODE
+	bool "Enable panic bootmode if kernel panic"
+	help
+	  Select this option will enable feature of setting a 'panic' flag into
+          REBOOT_REASON_ADDR, thus the bootloader can detect the panic reboot reason
+          and append a boomode to cmdline.
+
+config EMMC_UNSUPPORTED_HPI
+	bool "ZTEMT emmc unsupported hpi feature"
+	help
+	  emmc unsupported hpi feature.
+

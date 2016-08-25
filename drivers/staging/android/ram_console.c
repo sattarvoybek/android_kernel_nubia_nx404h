@@ -74,9 +74,20 @@ static int __devinit ram_console_probe(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_ZTEMT_PANIC_BOOTMODE
+static const struct of_device_id msm_ram_console_match[] = {
+	{.compatible = "ram-console"},
+	{}
+};
+#endif
+
 static struct platform_driver ram_console_driver = {
 	.driver		= {
 		.name	= "ram_console",
+#ifdef CONFIG_ZTEMT_PANIC_BOOTMODE
+		.owner = THIS_MODULE,
+		.of_match_table = msm_ram_console_match,
+#endif
 	},
 	.probe = ram_console_probe,
 };

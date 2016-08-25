@@ -54,6 +54,11 @@
 
 #define SCM_IO_DISABLE_PMIC_ARBITER	1
 
+#ifdef CONFIG_ZTEMT_PANIC_BOOTMODE
+/* This flag must be the same as in aboot */
+#define PANIC_MODE           0x77665523
+#endif
+
 #ifdef CONFIG_MSM_RESTART_V2
 #define use_restart_v2()	1
 #else
@@ -98,12 +103,12 @@ static void set_dload_mode(int on)
 		dload_mode_enabled = on;
 	}
 }
-
+#ifndef CONFIG_ZTEMT_RESTART
 static bool get_dload_mode(void)
 {
 	return dload_mode_enabled;
 }
-
+#endif
 static void enable_emergency_dload_mode(void)
 {
 	if (emergency_dload_mode_addr) {
@@ -258,6 +263,15 @@ static void msm_restart_prepare(const char *cmd)
 	/* Write download mode flags if we're panic'ing */
 	set_dload_mode(in_panic);
 
+#ifdef CONFIG_ZTEMT_RESTART
+        /* Judge restart_mode after download_mode, when device reset,
+         the diag cannot make the device enter download mode. */
+	if (!download_mode)
+		set_dload_mode(0);
+
+	if (restart_mode == RESTART_DLOAD)
+		set_dload_mode(1);
+#else
 	/* Write download mode flags if restart_mode says so */
 	if (restart_mode == RESTART_DLOAD)
 		set_dload_mode(1);
@@ -266,14 +280,20 @@ static void msm_restart_prepare(const char *cmd)
 	if (!download_mode)
 		set_dload_mode(0);
 #endif
+#endif
 
 	pm8xxx_reset_pwr_off(1);
 
+#ifdef CONFIG_ZTEMT_RESTART
+	/* for menu reboot, the cmd is NULL, warm reset for restart reason. */
+	qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
+#else
 	/* Hard reset the PMIC unless memory contents must be maintained. */
 	if (get_dload_mode() || (cmd != NULL && cmd[0] != '\0'))
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_WARM_RESET);
 	else
 		qpnp_pon_system_pwr_off(PON_POWER_OFF_HARD_RESET);
+#endif
 
 	if (cmd != NULL) {
 		if (!strncmp(cmd, "bootloader", 10)) {
@@ -292,6 +312,20 @@ static void msm_restart_prepare(const char *cmd)
 			__raw_writel(0x77665501, restart_reason);
 		}
 	}
+#ifdef CONFIG_ZTEMT_RESTART
+	/* for menu reboot, the cmd is NULL, default 0x77665501. */
+	else {
+		__raw_writel(0x77665501, restart_reason);
+	}
+#endif
+
+#ifdef CONFIG_ZTEMT_PANIC_BOOTMODE
+	if(in_panic)
+	{
+		printk(KERN_EMERG" set panic reboot reason\n");
+		__raw_writel(PANIC_MODE, restart_reason);
+	}
+#endif
 
 	flush_cache_all();
 	outer_flush_all();
